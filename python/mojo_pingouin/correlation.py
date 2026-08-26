@@ -5,7 +5,7 @@ import pandas as pd
 from scipy.stats import kendalltau, spearmanr, t
 
 from . import _lib
-from ._common import check_alternative, format_bf
+from ._common import check_alternative, clean_samples, format_bf
 from ._stats import achieved_corr_power, bayesfactor_pearson
 from .effsize import compute_esci
 
@@ -29,8 +29,7 @@ def corr(x, y, alternative="two-sided", method="pearson", **kwargs):
             "Since Pingouin 0.4.0, the 'tail' argument has been renamed to "
             "'alternative'."
         )
-    keep = ~np.isnan(x) & ~np.isnan(y)
-    x, y = np.ascontiguousarray(x[keep]), np.ascontiguousarray(y[keep])
+    x, y, _ = clean_samples(x, y, paired=True)
     n = x.size
 
     if method == "pearson":

@@ -62,12 +62,12 @@ preallocated input arrays.
 
 | case | mojo-pingouin | pingouin | result |
 | --- | ---: | ---: | ---: |
-| Cohen d (5M + 5M) | 14.80 ms | 118.86 ms | 8.03x faster |
-| Welch t-test (5M + 5M) | 31.48 ms | 473.24 ms | 15.03x faster |
-| Pearson corr (5M pairs) | 114.07 ms | 405.23 ms | 3.55x faster |
-| CLES (4k x 4k pairs) | 36.45 ms | 270.65 ms | 7.43x faster |
-| one-way ANOVA (1M, 8 groups) | 20.25 ms | 96.26 ms | 4.75x faster |
-| distance_corr (300, 200 permutations) | 48.35 ms | 5700.49 ms | 117.91x faster |
+| Cohen d (5M + 5M) | 13.85 ms | 86.59 ms | 6.25x faster |
+| Welch t-test (5M + 5M) | 28.38 ms | 317.40 ms | 11.18x faster |
+| Pearson corr (5M pairs) | 27.21 ms | 253.00 ms | 9.30x faster |
+| CLES (4k x 4k pairs) | 37.24 ms | 159.02 ms | 4.27x faster |
+| one-way ANOVA (1M, 8 groups) | 17.46 ms | 64.96 ms | 3.72x faster |
+| distance_corr (300, 200 permutations) | 38.06 ms | 2958.35 ms | 77.73x faster |
 
 The large distance-correlation gain comes from computing and double-centering
 each distance matrix once. A permutation then reindexes the centered matrix
@@ -92,7 +92,13 @@ aggregation supplies the sufficient statistics for ANOVA. SciPy remains
 responsible for distribution CDFs, critical values, rank tests, and quadrature,
 while Mojo performs the array-sized work.
 
-No GPU path is included.
+No GPU path is included. The bulk numerical work here consists of moment and
+covariance reductions, grouped reductions, distance-matrix dot products, and
+indexed permutation dots. These kernels move far more than one byte per
+floating-point operation and remain below the roughly two-flops-per-byte point
+where device execution can justify transfer and launch overhead. CLES is a
+comparison-heavy branch kernel rather than a high-intensity floating-point
+kernel. CPU execution is therefore the only supported device path.
 
 ## License
 

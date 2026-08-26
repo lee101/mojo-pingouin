@@ -224,6 +224,21 @@ def test_corr(samples, method, alternative):
     )
 
 
+def test_corr_zero_copy_clean_path(monkeypatch):
+    x = np.linspace(-2.0, 3.0, 101)
+    y = np.linspace(1.0, 4.0, 101) ** 2
+    original = _lib.bivariate
+    seen = []
+
+    def recording_bivariate(clean_x, clean_y):
+        seen.append((np.shares_memory(clean_x, x), np.shares_memory(clean_y, y)))
+        return original(clean_x, clean_y)
+
+    monkeypatch.setattr(_lib, "bivariate", recording_bivariate)
+    assert_result_equal(mpg.corr(x, y), pg.corr(x, y))
+    assert seen == [(True, True)]
+
+
 def test_distance_corr_one_and_two_dimensional():
     rng = np.random.default_rng(22)
     for x, y in (

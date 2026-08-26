@@ -91,9 +91,12 @@ def ttest(
 def _one_way_data(data, dv, between):
     assert isinstance(data, pd.DataFrame), "Data must be a pandas dataframe."
     assert dv in data and between in data, "Columns are not in dataframe."
-    clean = data[[dv, between]].dropna()
-    values = np.ascontiguousarray(clean[dv], dtype=np.float64)
-    codes, labels = pd.factorize(clean[between], sort=False)
+    dv_values, between_values = data[dv], data[between]
+    if dv_values.hasnans or between_values.hasnans:
+        clean = data[[dv, between]].dropna()
+        dv_values, between_values = clean[dv], clean[between]
+    values = np.ascontiguousarray(dv_values, dtype=np.float64)
+    codes, labels = pd.factorize(between_values, sort=False)
     groups = len(labels)
     assert groups >= 2, "Data must contain at least two groups."
     return values, np.ascontiguousarray(codes, dtype=np.int64), groups
