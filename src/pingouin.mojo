@@ -1,6 +1,5 @@
 """Numerical kernels and their C ABI for mojo-pingouin."""
 
-from max.algorithm import parallelize
 from std.math import sqrt
 from std.runtime import initialize_runtime
 from std.sys.info import simd_width_of as simdwidthof
@@ -83,7 +82,8 @@ def moments(x: Ptr, n: Int, result: Ptr):
             i += 1
         result[unsafe_offset=chunk] = total
 
-    parallelize[sum_chunk](MOMENT_PARTS, MOMENT_PARTS)
+    for chunk in range(MOMENT_PARTS):
+        sum_chunk(chunk)
 
     var total = 0.0
     for chunk in range(MOMENT_PARTS):
@@ -107,7 +107,8 @@ def moments(x: Ptr, n: Int, result: Ptr):
             i += 1
         result[unsafe_offset=MOMENT_PARTS + chunk] = m2
 
-    parallelize[m2_chunk](MOMENT_PARTS, MOMENT_PARTS)
+    for chunk in range(MOMENT_PARTS):
+        m2_chunk(chunk)
 
     var m2 = 0.0
     for chunk in range(MOMENT_PARTS):
